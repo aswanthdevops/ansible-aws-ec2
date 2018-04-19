@@ -1,0 +1,52 @@
+sudo pip install --upgrade pip
+sudo pip install boto
+sudo pip install boto3
+sudo yum install ansible
+
+vim ~/.boto
+
+[ansible@aserver dev]$ cat ~/.boto
+[Credentials]
+AWS_ACCESS_KEY_ID=XXXXXXXXXXXXXXX
+AWS_SECRET_ACCESS_EY=XXXXXXXX
+
+
+[ansible@aserver dev]$ cat ec2.yml 
+---
+- name: Create a new Demo EC2 instance
+  hosts: localhost
+  gather_facts: False
+
+  vars:
+      region: us-east-1
+      instance_type: t2.micro
+      ami: ami-6871a115  # RHEL 7.4
+      keypair: vijay_key # pem file name
+      key: XXXXXXXXX
+      secret: XXXXXXXXXXXXX
+  
+  tasks:
+    - name: create keypair
+      ec2_key:
+       name: vijay_key
+       aws_access_key: "{{ key }}"
+       aws_secret_key: "{{ secret }}"
+       
+    - name: Create an ec2 instance
+      ec2:
+         aws_access_key: "{{ key }}"
+         aws_secret_key: "{{ secret }}"
+         key_name: "{{ keypair }}"
+         #group: einsteinish  # security group name
+         instance_type: "{{ instance_type}}"
+         image: "{{ ami }}"
+         wait: true
+         region: "{{ region }}"
+         count: 1  # default
+         count_tag:
+            Name: vijay
+         instance_tags:
+            Name: vijay
+         vpc_subnet_id: subnet-e98ce1b3
+         assign_public_ip: yes
+      register: ec2
